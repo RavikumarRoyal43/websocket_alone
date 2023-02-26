@@ -6,6 +6,25 @@ const http = require('http');
 const cors = require('cors');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+const compression = require('compression')
+const path = require("path");
+
+app.use(compression());
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
+    res.setHeader(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PATCH, PUT, DELETE, OPTIONS"
+    );
+    next();
+});
+
+app.use("/", express.static(path.join(__dirname, "../", "dist")));
+
 const io = new Server(server, {
     cors: {
         origins: ['*']
@@ -14,7 +33,7 @@ const io = new Server(server, {
 
 app.use(cors());
 
-app.get('/', (req, res) => {
+app.get('/test', (req, res) => {
     res.send('test');
 });
 
@@ -35,6 +54,10 @@ io.on('connection', (socket) => {
         console.log('message: ' + msg);
         socket.broadcast.emit('my broadcast', `${msg}`);
     });
+});
+
+app.use((req, res, next) => {
+    res.sendFile(path.join(__dirname, "../", "dist", "index.html"));
 });
 
 server.listen(3000, () => {
